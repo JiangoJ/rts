@@ -9,12 +9,9 @@ file(GLOB RTS_SRC
   "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
 )
 
-# OpenGL
-find_package(OpenGL REQUIRED)
-# glfw installed via brew doesnt come with a cmake config file
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GLFW REQUIRED glfw3)
+find_package(raylib REQUIRED)
 
 add_executable(rts main.cpp ${RTS_SRC})
-target_include_directories(rts PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${OPENGL_gl_LIBRARY} ${GLFW_INCLUDE_DIRS})
-target_link_libraries(rts ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES})
+target_include_directories(rts PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include )
+target_link_libraries(rts raylib)
+
