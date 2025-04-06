@@ -1,7 +1,6 @@
 #include "GameLoop.h"
 #include "GameContext.h"
-#include "Render.h"
-#include <raylib.h>
+#include "RenderTool.h"
 
 std::unique_ptr<GameContext> GameLoop::currContext = nullptr;
 bool GameLoop::initialized = false;
@@ -20,16 +19,18 @@ void GameLoop::initialize() {
 
   // Start Game
   currContext = std::make_unique<GameContext>(GetFrameTime());
-  currContext->randomInitialization(2, 5);
+  currContext->initialize(2);
+
+  // Give game context to render tool
+  RenderTool::setGameContext(currContext.get());
+  RenderTool::launchTool();
 
   while (!WindowShouldClose()) {
     BeginDrawing();
     ClearBackground(RAYWHITE);
-    // TODO: draw
     // Update GameContext
-    // Update Frame
-
     currContext->updateTick(GetFrameTime());
+    // Update Frame
     renderFrame();
     EndDrawing();
   }
@@ -41,10 +42,14 @@ void GameLoop::initialize() {
  * Render all of the visual elements
  */
 void GameLoop::renderFrame() {
+
+  // Load tool
+  RenderTool::renderTool();
+
   // For now just the entities
   for (auto &pContext : currContext->playerContexts) {
     for (auto &e : pContext.entities) {
-      renderEntity(e);
+      e->render();
     }
   }
 }

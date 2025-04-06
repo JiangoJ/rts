@@ -2,7 +2,6 @@
 
 #include "Utils.h"
 #include "GameContext.h"
-#include "Render.h"
 
 class GameLoop {
   /**

@@ -3,10 +3,14 @@
 #include "Entity.h"
 
 class PlayerContext {
+  /**
+   * [PlayerContext]: Subset of GameContext that represents knowledge of the player
+   */
 public:
-  PlayerContext() {};
+  Color color;
 
-  std::vector<Entity> entities;
+  PlayerContext();
+  std::vector<Entity*> entities;
   void randomInitialization(int entityCount);
 };
 
@@ -18,11 +22,12 @@ class GameContext {
 private:
   float currTs{};
 
-
 public:
   GameContext(float startTs) : currTs(startTs) {};
 
   std::vector<PlayerContext> playerContexts;
   void randomInitialization(int playerCount, int entityCount);
   void updateTick(float newTs); // TODO: should run the game loop
+
+  void initialize(int playerCount);
 };
