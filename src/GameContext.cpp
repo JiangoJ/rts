@@ -12,6 +12,14 @@ PlayerContext::PlayerContext() {
   };
 }
 
+void PlayerContext::addTroop(const Vector2& position) {
+  entities.emplace_back(new Troop(this, Position(position.x, position.y)));
+}
+
+void PlayerContext::removeLastTroop() {
+  entities.pop_back();
+}
+
 /**
  * [For Testing]: create a bunch of random entities
  */

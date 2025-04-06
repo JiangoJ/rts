@@ -2,6 +2,7 @@
 #include "Constants.h"
 #include "GameContext.h"
 #include <optional>
+#include <raylib.h>
 
 // Static Init
 bool RenderTool::isLaunched = false;
@@ -23,6 +24,9 @@ void RenderTool::launchTool() {
 }
 
 void RenderTool::renderTool() {
+
+  bool isCollisionWithButton = false;
+
   auto mousePoint = GetMousePosition();
   // Draw buttons for choosing which player to add troops for
   for (int i = 0; i < buttons.size(); i++) {
@@ -33,6 +37,7 @@ void RenderTool::renderTool() {
     DrawText(bTool.text.c_str(), (int) (bTool.bounds.x + (bTool.bounds.width) / 3), (int) (bTool.bounds.y + (bTool.bounds.height) / 3), 5, BLACK);
 
     if (CheckCollisionPointRec(mousePoint, bTool.bounds)) {
+      isCollisionWithButton = true;
       if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         if (!selectedPContext) {
           bTool.isPressed = !bTool.isPressed;
@@ -48,9 +53,14 @@ void RenderTool::renderTool() {
     }
   }
 
-  // May need to place troops
-  if (selectedPContext) {
-
+  // place troops
+  if (selectedPContext && !isCollisionWithButton) {
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+      gContext->playerContexts[selectedPContext.value()].addTroop(mousePoint);
+    }
+    else if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+      gContext->playerContexts[selectedPContext.value()].removeLastTroop();
+    }
   }
 }
 

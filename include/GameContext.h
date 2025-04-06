@@ -12,6 +12,9 @@ public:
   PlayerContext();
   std::vector<Entity*> entities;
   void randomInitialization(int entityCount);
+
+  void addTroop(const Vector2& position);
+  void removeLastTroop();
 };
 
 class GameContext {
