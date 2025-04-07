@@ -1,8 +1,6 @@
 #include "RenderTool.h"
 #include "Constants.h"
 #include "GameContext.h"
-#include <optional>
-#include <raylib.h>
 
 // Static Init
 bool RenderTool::isLaunched = false;
@@ -18,7 +16,8 @@ void RenderTool::launchTool() {
   buttons.reserve(numPlayers);
 
   for (int i = 0; i < numPlayers; i++) {
-    ToolButton tb = {"P" + std::to_string(i), Rectangle{(float)i * (RENDER_TOOLBUTTON_WIDTH + 5) + 5, 5, RENDER_TOOLBUTTON_WIDTH, RENDER_TOOLBUTTON_HEIGHT}, 0};
+    auto& pContext = gContext->playerContexts[i];
+    ToolButton tb = {"P" + std::to_string(pContext.playerId), Rectangle{(float)i * (RENDER_TOOLBUTTON_WIDTH + 5) + 5, 5, RENDER_TOOLBUTTON_WIDTH, RENDER_TOOLBUTTON_HEIGHT}, 0};
     buttons.push_back(tb);
   }
 }
@@ -53,7 +52,7 @@ void RenderTool::renderTool() {
     }
   }
 
-  // place troops
+  // place troops, some logic to ensure we dont place extra troop when we click button
   if (selectedPContext && !isCollisionWithButton) {
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
       gContext->playerContexts[selectedPContext.value()].addTroop(mousePoint);

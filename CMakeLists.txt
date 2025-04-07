@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.11)
 
+# [Dependencies]: raylib, nlohmann-json
+
 # Needed to add VERSION because some subdirectory libraries utilize CMAKE_PROJECT_VERSION
 project(rts VERSION 1.0)
 set(CMAKE_CXX_STANDARD 20)
@@ -10,8 +12,9 @@ file(GLOB RTS_SRC
 )
 
 find_package(raylib REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 add_executable(rts main.cpp ${RTS_SRC})
 target_include_directories(rts PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include )
-target_link_libraries(rts raylib)
+target_link_libraries(rts PRIVATE raylib nlohmann_json::nlohmann_json)
 

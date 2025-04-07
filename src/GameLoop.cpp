@@ -29,7 +29,7 @@ void GameLoop::initialize() {
     BeginDrawing();
     ClearBackground(RAYWHITE);
     // Update GameContext
-    currContext->updateTick(GetFrameTime());
+    currContext->updateTick(GetTime());
     // Update Frame
     renderFrame();
     EndDrawing();

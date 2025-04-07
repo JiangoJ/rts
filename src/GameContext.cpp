@@ -3,20 +3,19 @@
 #include "Utils.h"
 #include <raylib.h>
 
-PlayerContext::PlayerContext() {
+PlayerContext::PlayerContext(int playerId) : playerId(playerId) {
   // Randomly initialize a starting color
-  color = Color{
-    (unsigned char) GetRandomValue(0, 255), 
-    (unsigned char) GetRandomValue(0, 255), 
-    (unsigned char) GetRandomValue(0, 255), 255
-  };
+  color = getRandomColor();
 }
 
 void PlayerContext::addTroop(const Vector2& position) {
-  entities.emplace_back(new Troop(this, Position(position.x, position.y)));
+  entities.emplace_back(new Troop(this, position));
 }
 
 void PlayerContext::removeLastTroop() {
+  if (entities.empty()) {
+    return;
+  }
   entities.pop_back();
 }
 
@@ -31,7 +30,7 @@ void PlayerContext::randomInitialization(int entityCount) {
   for (int i = 0; i < entityCount; i++) {
     auto randomX = getRandDouble(0, WIN_WIDTH);
     auto randomY = getRandDouble(0, WIN_HEIGHT);
-    entities.emplace_back(new Troop(this, Position(randomX, randomY)));
+    entities.emplace_back(new Troop(this, Vector2{randomX, randomY}));
   }
 }
 
@@ -44,7 +43,7 @@ void GameContext::randomInitialization(int playerCount, int entityCount) {
 
   playerContexts.reserve(playerCount);
   for (int i = 0; i < playerCount; i++) {
-    playerContexts.emplace_back();
+    playerContexts.emplace_back(i);
     playerContexts.back().randomInitialization(entityCount);
   }
 }
@@ -58,12 +57,20 @@ void GameContext::updateTick(float ts) {
   // Temp: just to get some random movements
   for (auto &pContext : playerContexts) {
     for (auto &e : pContext.entities) {
+
+      if (e->isDead()) {
+        continue;
+      }
+
       auto xDelta = getRandDouble(-50, 50) / 15;
       auto yDelta = getRandDouble(-50, 50) / 15;
       e->position.x += xDelta;
       e->position.y += yDelta;
     }
   }
+
+  // TODO: collision detection
+  collisionDetection();
 }
 
 void GameContext::initialize(int playerCount) {
@@ -71,6 +78,26 @@ void GameContext::initialize(int playerCount) {
 
   playerContexts.reserve(playerCount);
   for (int i = 0; i < playerCount; i++) {
-    playerContexts.emplace_back();
+    playerContexts.emplace_back(i);
+  }
+}
+
+// TODO: This is very inefficient O(n^2), ideally some quadtree implementation would be better
+void GameContext::collisionDetection() {
+  for (auto& pContext : playerContexts) {
+    for (auto* e : pContext.entities) {
+
+      if (e->isDead()) {
+        continue;
+      }
+
+      for (auto& pContextOther : playerContexts) {
+        for (auto* eOther : pContextOther.entities) {
+          if (CheckCollisionCircles(e->position, TROOP_RENDER_RADIUS, eOther->position, TROOP_RENDER_RADIUS)) {
+            e->onCollision(*eOther, currTs);
+          }
+        }
+      }
+    }
   }
 }
