@@ -1,4 +1,5 @@
 #pragma once
+#include "LLMClient.h"
 #include "Utils.h"
 #include "Entity.h"
 
@@ -12,6 +13,7 @@ public:
   Color color;
   std::vector<Entity*> entities;
 
+  PlayerContext() {}
   PlayerContext(int playerId);
   void randomInitialization(int entityCount);
 
@@ -26,14 +28,21 @@ class GameContext {
   */
 public:
   float currTs{};
+  float lastQueryTs{};
+  int activePlayer{};
+  LLMClient* client{};
 
-  GameContext(float startTs) : currTs(startTs) {};
+  GameContext(float startTs, LLMClient* client) : currTs(startTs), client(client) {};
   std::vector<PlayerContext> playerContexts;
 
   void updateTick(float newTs); 
   void collisionDetection();
-
+  void updateGameState(nlohmann::json& updatedState);
 
   void randomInitialization(int playerCount, int entityCount);
   void initialize(int playerCount);
 };
+
+// void from_json(const nlohmann::json& json, PlayerContext& pc);
+void to_json(nlohmann::json& json, const PlayerContext& pc);
+void to_json(nlohmann::json& json, const GameContext& gc);

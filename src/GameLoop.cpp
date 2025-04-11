@@ -1,5 +1,7 @@
 #include "GameLoop.h"
+#include "Constants.h"
 #include "GameContext.h"
+#include "LLMClient.h"
 #include "RenderTool.h"
 
 std::unique_ptr<GameContext> GameLoop::currContext = nullptr;
@@ -17,9 +19,12 @@ void GameLoop::initialize() {
 
   initialized = true;
 
+  // Initialize GroqClient
+  LLMClient groqClient;
+
   // Start Game
-  currContext = std::make_unique<GameContext>(GetFrameTime());
-  currContext->initialize(2);
+  currContext = std::make_unique<GameContext>(GetFrameTime(), &groqClient);
+  currContext->randomInitialization(2, 1);
 
   // Give game context to render tool
   RenderTool::setGameContext(currContext.get());

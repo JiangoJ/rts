@@ -1,4 +1,7 @@
 .git/
 .cache/
 build/
+Debug/
 tags
+models/
+deps/

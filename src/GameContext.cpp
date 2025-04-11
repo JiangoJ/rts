@@ -8,8 +8,9 @@ PlayerContext::PlayerContext(int playerId) : playerId(playerId) {
   color = getRandomColor();
 }
 
-void PlayerContext::addTroop(const Vector2& position) {
-  entities.emplace_back(new Troop(this, position));
+void PlayerContext::addTroop(const Vector2 &position) {
+  auto size = entities.size();
+  entities.emplace_back(new Troop(this, size, position));
 }
 
 void PlayerContext::removeLastTroop() {
@@ -30,7 +31,7 @@ void PlayerContext::randomInitialization(int entityCount) {
   for (int i = 0; i < entityCount; i++) {
     auto randomX = getRandDouble(0, WIN_WIDTH);
     auto randomY = getRandDouble(0, WIN_HEIGHT);
-    entities.emplace_back(new Troop(this, Vector2{randomX, randomY}));
+    entities.emplace_back(new Troop(this, i, Vector2{randomX, randomY}));
   }
 }
 
@@ -48,28 +49,32 @@ void GameContext::randomInitialization(int playerCount, int entityCount) {
   }
 }
 
-// TODO: currently just randomly moves around, on average should stay in place
+// Move entities toward their desired location
 void GameContext::updateTick(float ts) {
 
   float tsDelta = ts - currTs;
   currTs = ts;
 
-  // Temp: just to get some random movements
+  if (currTs - lastQueryTs >= QUERY_DELTA_S || lastQueryTs == 0) {
+    auto gameStateJson = nlohmann::json(*this);
+    for (auto& pContext : playerContexts) {
+      gameStateJson["activePlayer"] = pContext.playerId;
+      client->queryRTS(gameStateJson);
+      auto resJson = client->getRTSJsonResponse();
+      updateGameState(resJson);
+    }
+    lastQueryTs = currTs;
+  }
+
   for (auto &pContext : playerContexts) {
     for (auto &e : pContext.entities) {
-
       if (e->isDead()) {
         continue;
       }
-
-      auto xDelta = getRandDouble(-50, 50) / 15;
-      auto yDelta = getRandDouble(-50, 50) / 15;
-      e->position.x += xDelta;
-      e->position.y += yDelta;
+      e->onTickUpdate(tsDelta);
     }
   }
 
-  // TODO: collision detection
   collisionDetection();
 }
 
@@ -82,22 +87,50 @@ void GameContext::initialize(int playerCount) {
   }
 }
 
-// TODO: This is very inefficient O(n^2), ideally some quadtree implementation would be better
+// TODO: This is very inefficient O(n^2), ideally some quadtree implementation
+// would be better
 void GameContext::collisionDetection() {
-  for (auto& pContext : playerContexts) {
-    for (auto* e : pContext.entities) {
+  for (auto &pContext : playerContexts) {
+    for (auto *e : pContext.entities) {
 
       if (e->isDead()) {
         continue;
       }
 
-      for (auto& pContextOther : playerContexts) {
-        for (auto* eOther : pContextOther.entities) {
-          if (CheckCollisionCircles(e->position, TROOP_RENDER_RADIUS, eOther->position, TROOP_RENDER_RADIUS)) {
+      for (auto &pContextOther : playerContexts) {
+        for (auto *eOther : pContextOther.entities) {
+          if (CheckCollisionCircles(e->position, TROOP_RENDER_RADIUS,
+                                    eOther->position, TROOP_RENDER_RADIUS)) {
             e->onCollision(*eOther, currTs);
           }
         }
       }
     }
   }
+}
+
+void GameContext::updateGameState(nlohmann::json& updatedState) {
+  int activePlayer = updatedState["activePlayer"];
+  auto entities = updatedState["players"][activePlayer]["entities"].template get<std::vector<Entity>>();
+  auto& player = playerContexts[activePlayer];
+  for (int i = 0; i < player.entities.size(); i++) {
+    auto* e = player.entities[i];
+    auto& newE = entities[i];
+    e->position.x = newE.position.x;
+    e->position.y = newE.position.y;
+  }
+}
+
+// JSON
+void to_json(nlohmann::json &json, const PlayerContext &pc) {
+  json["playerId"] = pc.playerId;
+  for (auto *e : pc.entities) {
+    json["entities"].push_back(*e);
+  }
+}
+
+void to_json(nlohmann::json &json, const GameContext &gc) {
+  json["activePlayer"] = gc.activePlayer;
+  json["current_timestamp"] = gc.currTs;
+  json["players"] = gc.playerContexts;
 }
