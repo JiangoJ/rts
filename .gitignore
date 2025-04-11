@@ -5,3 +5,4 @@ Debug/
 tags
 models/
 deps/
+groqserver/venv/
