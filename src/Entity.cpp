@@ -19,7 +19,7 @@ void Entity::render() {
                      TROOP_RENDER_RADIUS * 2, TROOP_RENDER_RADIUS / 2, BLACK);
 }
 
-void Entity::setTargetPosition(Vector2 &position) { targetPosition = position; }
+void Entity::setTargetPosition(Vector2 &newPos) { targetPosition = newPos; }
 
 void Entity::onTickUpdate(float tsDelta) {
   // move towards target position
@@ -28,15 +28,13 @@ void Entity::onTickUpdate(float tsDelta) {
   }
 
   float totalDist = Vector2Distance(position, targetPosition);
+
+  if (totalDist <= MIN_MOVE_DIST) {
+    return;
+  }
+
   float moveDist = VELOCITY * tsDelta;
   float moveRatio = std::abs(moveDist / totalDist);
-
-  std::cout << fmt::format(
-                   "xDelta:{} yDelta:{} totalDist:{} moveDist:{} moveRatio:{}",
-                   (targetPosition.x - position.x),
-                   (targetPosition.y - position.y), totalDist, moveDist,
-                   moveRatio)
-            << std::endl;
 
   position.x += (targetPosition.x - position.x) * moveRatio;
   position.y += (targetPosition.y - position.y) * moveRatio;

@@ -37,7 +37,7 @@ public:
 
   void updateTick(float newTs); 
   void collisionDetection();
-  void updateGameState(nlohmann::json& updatedState);
+  void updateGameState(const nlohmann::json& updatedState);
 
   void randomInitialization(int playerCount, int entityCount);
   void initialize(int playerCount);

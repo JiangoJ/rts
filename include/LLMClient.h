@@ -6,16 +6,23 @@
  * and receive JSON responses
  */
 
+class GameContext;
+
 class LLMClient {
-private:
+
+public:
   std::string endpoint;
   CURL *curl;
   CURLcode res;
+
+  std::string msgBody{};
   std::string readBuffer{};
 
-public:
+  GameContext* gContext{nullptr};
+
   LLMClient();
   ~LLMClient() { curl_easy_cleanup(curl); }
-  void queryRTS(const nlohmann::json &gameStateJson);
+  void queryRTS(nlohmann::json &gameStateJson);
   nlohmann::json getRTSJsonResponse();
+  void setGameContext(GameContext* gContext);
 };

@@ -19,12 +19,15 @@ void GameLoop::initialize() {
 
   initialized = true;
 
+  // TODO: this client to gamecontext circular dependency is unideal
   // Initialize GroqClient
   LLMClient groqClient;
 
   // Start Game
   currContext = std::make_unique<GameContext>(GetFrameTime(), &groqClient);
-  currContext->randomInitialization(2, 1);
+  currContext->randomInitialization(5, 10);
+
+  groqClient.setGameContext(currContext.get());
 
   // Give game context to render tool
   RenderTool::setGameContext(currContext.get());

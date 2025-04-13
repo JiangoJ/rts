@@ -1,7 +1,5 @@
 #include "GameContext.h"
-#include "Constants.h"
 #include "Utils.h"
-#include <raylib.h>
 
 PlayerContext::PlayerContext(int playerId) : playerId(playerId) {
   // Randomly initialize a starting color
@@ -60,8 +58,6 @@ void GameContext::updateTick(float ts) {
     for (auto& pContext : playerContexts) {
       gameStateJson["activePlayer"] = pContext.playerId;
       client->queryRTS(gameStateJson);
-      auto resJson = client->getRTSJsonResponse();
-      updateGameState(resJson);
     }
     lastQueryTs = currTs;
   }
@@ -109,15 +105,15 @@ void GameContext::collisionDetection() {
   }
 }
 
-void GameContext::updateGameState(nlohmann::json& updatedState) {
+void GameContext::updateGameState(const nlohmann::json& updatedState) {
   int activePlayer = updatedState["activePlayer"];
   auto entities = updatedState["players"][activePlayer]["entities"].template get<std::vector<Entity>>();
   auto& player = playerContexts[activePlayer];
   for (int i = 0; i < player.entities.size(); i++) {
     auto* e = player.entities[i];
     auto& newE = entities[i];
-    e->position.x = newE.position.x;
-    e->position.y = newE.position.y;
+    // Take new position and set the target position
+    e->setTargetPosition(newE.position);
   }
 }
 
@@ -131,6 +127,5 @@ void to_json(nlohmann::json &json, const PlayerContext &pc) {
 
 void to_json(nlohmann::json &json, const GameContext &gc) {
   json["activePlayer"] = gc.activePlayer;
-  json["current_timestamp"] = gc.currTs;
   json["players"] = gc.playerContexts;
 }

@@ -1,12 +1,19 @@
 #include "LLMClient.h"
+#include "GameContext.h"
 
 size_t writeCallback(char *contents, size_t size, size_t nmemb,
-                     std::string *response) {
+                     void *userdata) {
   // Clear the current read buffer
-  response->clear();
+  auto *client = static_cast<LLMClient *>(userdata);
+  client->readBuffer.clear();
 
   size_t total_size = size * nmemb;
-  response->append(contents, total_size);
+  client->readBuffer.append(contents, total_size);
+
+  std::cout << client->readBuffer << std::endl;
+
+  client->gContext->updateGameState(nlohmann::json().parse(client->readBuffer));
+
   return total_size;
 }
 
@@ -16,22 +23,26 @@ LLMClient::LLMClient() {
   assert(curl);
 
   curl_easy_setopt(curl, CURLOPT_URL, GROQ_URL_RTS);
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
 
   curl_slist *headers{};
   headers = curl_slist_append(headers, "Content-Type: application/json");
   curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &writeCallback);
 }
 
-void LLMClient::queryRTS(const nlohmann::json &gameStateJson) {
+void LLMClient::queryRTS(nlohmann::json &gameStateJson) {
+
+  if (!gContext) {
+    return;
+  }
 
   curl_easy_setopt(curl, CURLOPT_POST, 1L);
   // TODO: not sure if I want to dump the entire thing here
-  std::string state = gameStateJson.dump();
+  msgBody = gameStateJson.dump();
 
-  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, state.c_str());
-  curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, state.size());
+  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, msgBody.c_str());
+  curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, msgBody.size());
   res = curl_easy_perform(curl);
 
   if (res != CURLE_OK) {
@@ -39,7 +50,8 @@ void LLMClient::queryRTS(const nlohmann::json &gameStateJson) {
   }
 }
 
-nlohmann::json LLMClient::getRTSJsonResponse() {
-  auto resJson = nlohmann::json().parse(readBuffer);
-  return resJson;
+nlohmann::json LLMClient::getRTSJsonResponse() { return nullptr; }
+
+void LLMClient::setGameContext(GameContext *gContext) {
+  this->gContext = gContext;
 }

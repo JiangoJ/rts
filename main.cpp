@@ -1,4 +1,3 @@
-#include <iostream>
 #include "GameLoop.h"
 #include "Utils.h"
 

@@ -4,7 +4,8 @@
 class PlayerContext;
 
 constexpr int MAX_HEALTH = 100;
-constexpr float VELOCITY = 0.1; // pixels per tick
+constexpr float VELOCITY = 10; // pixels per tick
+constexpr float MIN_MOVE_DIST = 1; // pixels per tick
 
 class Entity {
   /**
@@ -30,7 +31,7 @@ public:
   virtual float calcDmg(float ts) { return 0; }
 
   bool isDead() const { return health <= 0; }
-  void setTargetPosition(Vector2& position);
+  void setTargetPosition(Vector2& newPos);
   virtual void onTickUpdate(float tsDelta);
 };
 
