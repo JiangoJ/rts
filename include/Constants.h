@@ -10,7 +10,7 @@ constexpr static int TROOP_RENDER_RADIUS = 10;
 constexpr static int TROOP_HEALTH_PADDING = 10;
 
 constexpr static const char* GROQ_URL_RTS = "127.0.0.1:5000/rts";
-constexpr static float QUERY_DELTA_S = 5;
+constexpr static float QUERY_DELTA_S = 35;
 
 constexpr static const char* TINY_LLAMA = "/Users/justin/dev/rts/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf";
 constexpr static const char* PHI = "/Users/justin/dev/rts/models/phi-2.Q8_0.gguf";

@@ -23,6 +23,5 @@ public:
   LLMClient();
   ~LLMClient() { curl_easy_cleanup(curl); }
   void queryRTS(nlohmann::json &gameStateJson);
-  nlohmann::json getRTSJsonResponse();
   void setGameContext(GameContext* gContext);
 };

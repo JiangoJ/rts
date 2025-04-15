@@ -107,7 +107,7 @@ void GameContext::collisionDetection() {
 
 void GameContext::updateGameState(const nlohmann::json& updatedState) {
   int activePlayer = updatedState["activePlayer"];
-  auto entities = updatedState["players"][activePlayer]["entities"].template get<std::vector<Entity>>();
+  auto entities = updatedState["entities"].template get<std::vector<Entity>>();
   auto& player = playerContexts[activePlayer];
   for (int i = 0; i < player.entities.size(); i++) {
     auto* e = player.entities[i];

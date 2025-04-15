@@ -25,7 +25,7 @@ void GameLoop::initialize() {
 
   // Start Game
   currContext = std::make_unique<GameContext>(GetFrameTime(), &groqClient);
-  currContext->randomInitialization(5, 10);
+  currContext->randomInitialization(2, 5);
 
   groqClient.setGameContext(currContext.get());
 

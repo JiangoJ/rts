@@ -50,8 +50,6 @@ void LLMClient::queryRTS(nlohmann::json &gameStateJson) {
   }
 }
 
-nlohmann::json LLMClient::getRTSJsonResponse() { return nullptr; }
-
 void LLMClient::setGameContext(GameContext *gContext) {
   this->gContext = gContext;
 }

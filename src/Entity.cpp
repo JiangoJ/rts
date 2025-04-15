@@ -90,8 +90,5 @@ void to_json(nlohmann::json &j, const Entity &e) {
 
 void from_json(const nlohmann::json &j, Entity &e) {
   j.at("entityId").get_to(e.entityId);
-  j.at("health").get_to(e.health);
-  j.at("attackPower").get_to(e.attackPower);
-  j.at("attackRate").get_to(e.attackRate);
   j.at("position").get_to(e.position);
 }
