@@ -1,4 +1,5 @@
 #include "GameContext.h"
+#include "Constants.h"
 #include "Utils.h"
 
 PlayerContext::PlayerContext(int playerId) : playerId(playerId) {
@@ -7,15 +8,16 @@ PlayerContext::PlayerContext(int playerId) : playerId(playerId) {
 }
 
 void PlayerContext::addTroop(const Vector2 &position) {
-  auto size = entities.size();
-  entities.emplace_back(new Troop(this, size, position));
+  Troop* newTroop = new Troop(this, entityMap.size(), position);
+  entityMap.emplace(newTroop->entityId, newTroop);
 }
 
 void PlayerContext::removeLastTroop() {
-  if (entities.empty()) {
+  if (entityMap.empty()) {
     return;
   }
-  entities.pop_back();
+
+  entityMap.erase(--entityMap.end());
 }
 
 /**
@@ -23,13 +25,12 @@ void PlayerContext::removeLastTroop() {
  */
 void PlayerContext::randomInitialization(int entityCount) {
 
-  assert(entities.empty());
+  assert(entityMap.empty());
 
-  entities.reserve(entityCount);
   for (int i = 0; i < entityCount; i++) {
     auto randomX = getRandDouble(0, WIN_WIDTH);
     auto randomY = getRandDouble(0, WIN_HEIGHT);
-    entities.emplace_back(new Troop(this, i, Vector2{randomX, randomY}));
+    addTroop(Vector2{randomX, randomY});
   }
 }
 
@@ -54,8 +55,12 @@ void GameContext::updateTick(float ts) {
   currTs = ts;
 
   if (currTs - lastQueryTs >= QUERY_DELTA_S || lastQueryTs == 0) {
+
     auto gameStateJson = nlohmann::json(*this);
     for (auto& pContext : playerContexts) {
+      if (pContext.entityMap.empty()) {
+        continue;
+      }
       gameStateJson["activePlayer"] = pContext.playerId;
       client->queryRTS(gameStateJson);
     }
@@ -63,7 +68,7 @@ void GameContext::updateTick(float ts) {
   }
 
   for (auto &pContext : playerContexts) {
-    for (auto &e : pContext.entities) {
+    for (auto &[eId, e] : pContext.entityMap) {
       if (e->isDead()) {
         continue;
       }
@@ -87,15 +92,15 @@ void GameContext::initialize(int playerCount) {
 // would be better
 void GameContext::collisionDetection() {
   for (auto &pContext : playerContexts) {
-    for (auto *e : pContext.entities) {
+    for (auto& [eId, e] : pContext.entityMap) {
 
       if (e->isDead()) {
         continue;
       }
 
       for (auto &pContextOther : playerContexts) {
-        for (auto *eOther : pContextOther.entities) {
-          if (CheckCollisionCircles(e->position, TROOP_RENDER_RADIUS,
+        for (auto& [eOtherId, eOther] : pContextOther.entityMap) {
+          if (CheckCollisionCircles(e->position, e->attackRange,
                                     eOther->position, TROOP_RENDER_RADIUS)) {
             e->onCollision(*eOther, currTs);
           }
@@ -109,18 +114,21 @@ void GameContext::updateGameState(const nlohmann::json& updatedState) {
   int activePlayer = updatedState["activePlayer"];
   auto entities = updatedState["entities"].template get<std::vector<Entity>>();
   auto& player = playerContexts[activePlayer];
-  for (int i = 0; i < player.entities.size(); i++) {
-    auto* e = player.entities[i];
-    auto& newE = entities[i];
-    // Take new position and set the target position
-    e->setTargetPosition(newE.position);
+
+  for (auto& updatedEntity : entities) {
+
+    auto eIt = player.entityMap.find(updatedEntity.entityId);
+    if (eIt == player.entityMap.end()) {
+      continue;
+    }
+    eIt->second->setTargetPosition(updatedEntity.position);
   }
 }
 
 // JSON
 void to_json(nlohmann::json &json, const PlayerContext &pc) {
   json["playerId"] = pc.playerId;
-  for (auto *e : pc.entities) {
+  for (auto& [eId, e] : pc.entityMap) {
     json["entities"].push_back(*e);
   }
 }

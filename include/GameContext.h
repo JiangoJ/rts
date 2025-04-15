@@ -11,7 +11,8 @@ class PlayerContext {
 public:
   int playerId;
   Color color;
-  std::vector<Entity*> entities;
+
+  std::map<std::string, Entity*> entityMap;
 
   PlayerContext() {}
   PlayerContext(int playerId);

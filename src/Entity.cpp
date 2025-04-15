@@ -1,12 +1,16 @@
 #include "Entity.h"
+#include "Constants.h"
 #include "GameContext.h"
 #include "Utils.h"
-#include <raymath.h>
+#include <raylib.h>
 
 Entity::Entity(PlayerContext *pContext, int entityId, Vector2 p)
     : pContext(pContext), entityId(std::to_string(pContext->playerId) + "_" +
                                    std::to_string(entityId)),
-      position(p), targetPosition(p) {}
+      position(p), targetPosition(p) {
+
+  attackRange =  getRandDouble(TROOP_RENDER_RADIUS, 50);
+}
 
 void Entity::render() {
   // Render Health Bar and Box
@@ -29,12 +33,12 @@ void Entity::onTickUpdate(float tsDelta) {
 
   float totalDist = Vector2Distance(position, targetPosition);
 
-  if (totalDist <= MIN_MOVE_DIST) {
-    return;
-  }
-
   float moveDist = VELOCITY * tsDelta;
   float moveRatio = std::abs(moveDist / totalDist);
+
+  if (moveRatio > 1) {
+    return;
+  }
 
   position.x += (targetPosition.x - position.x) * moveRatio;
   position.y += (targetPosition.y - position.y) * moveRatio;
@@ -49,7 +53,14 @@ Troop::Troop(PlayerContext *pContext, int entityId, Vector2 p)
 
 void Troop::render() {
   Entity::render();
+  // Draw Troop
   DrawCircle(position.x, position.y, TROOP_RENDER_RADIUS, pContext->color);
+
+  // Draw Troop Attack Range
+  DrawCircleLines(position.x, position.y, attackRange, pContext->color);
+
+  // Draw line to target position
+  DrawLine(position.x, position.y, targetPosition.x, targetPosition.y, pContext->color);
 }
 
 void Troop::onCollision(Entity &other, float ts) {
@@ -86,6 +97,7 @@ void to_json(nlohmann::json &j, const Entity &e) {
   j["attackRate"] = e.attackRate;
   j["position"] = e.position;
   j["isDead"] = e.isDead();
+  j["attackRange"] = e.attackRange;
 }
 
 void from_json(const nlohmann::json &j, Entity &e) {

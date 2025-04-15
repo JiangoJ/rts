@@ -25,11 +25,11 @@ void GameLoop::initialize() {
 
   // Start Game
   currContext = std::make_unique<GameContext>(GetFrameTime(), &groqClient);
-  currContext->randomInitialization(2, 5);
+  currContext->randomInitialization(2, 0);
 
   groqClient.setGameContext(currContext.get());
 
-  // Give game context to render tool
+  // Give game context to render too5l
   RenderTool::setGameContext(currContext.get());
   RenderTool::launchTool();
 
@@ -56,7 +56,7 @@ void GameLoop::renderFrame() {
 
   // For now just the entities
   for (auto &pContext : currContext->playerContexts) {
-    for (auto &e : pContext.entities) {
+    for (auto& [eId, e] : pContext.entityMap) {
       e->render();
     }
   }

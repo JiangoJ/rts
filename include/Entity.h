@@ -4,7 +4,7 @@
 class PlayerContext;
 
 constexpr int MAX_HEALTH = 100;
-constexpr float VELOCITY = 10; // pixels per tick
+constexpr float VELOCITY = 50; // pixels per tick
 constexpr float MIN_MOVE_DIST = 0.01; // pixels per tick
 
 class Entity {
@@ -19,6 +19,8 @@ public:
   int attackPower;  // dmg per attack
   float attackRate; // s between attacks
   float prevAttackTs{};
+
+  float attackRange{};
 
   Entity() {}
   Entity(PlayerContext *pContext, int entityId, Vector2 p);
